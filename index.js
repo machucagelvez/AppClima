@@ -1,5 +1,5 @@
 require('dotenv').config()
-const { leerInput, pausa, inquirerMenu } = require("./helpers/inquirer");
+const { leerInput, pausa, inquirerMenu, listarLugares } = require("./helpers/inquirer");
 const Busquedas = require("./models/busquedas");
 
 
@@ -12,26 +12,42 @@ const main = async() => {
         switch (opt) {
             case 1:
                 //Mostrar mensaje
-                const lugar = await leerInput('Ciudad: ')
-                await busquedas.ciudad(lugar)
+                const termino = await leerInput('Ciudad: ')
+
                 //Buscar los lugares
+                const lugares = await busquedas.ciudad(termino)
                 
                 //Seleccionar una opción
+                const id = await listarLugares(lugares)
+                if(id === 0) continue //Si se presiona la opción '0' se sale del case
+                const lugarSel = lugares.find(lugar => lugar.id === id) //Buscar por id dentro del array de lugares. Método de JS
+                const {nombre, lat, lng} = lugarSel
+
+                //Guardar en DB
+                busquedas.agregarHistorial(lugarSel.nombre)
                 
                 //Clima
+                const clima = await busquedas.climaLugar(lat, lng)
+                const {desc, min, max, temp} = clima
+                
                 
                 //Mostrar resultados
+                console.clear()
                 console.log('\nInformación de la ciudad\n'.green)
-                console.log('Ciudad:',)
-                console.log('Lat:',)
-                console.log('Lng:',)
-                console.log('Temperatura',)
-                console.log('Mínima',)
-                console.log('Máxima',)
+                console.log('Ciudad:', nombre.green)
+                console.log('Lat:', lat)
+                console.log('Lng:', lng)
+                console.log('Temperatura:', temp)
+                console.log('Mínima:', min)
+                console.log('Máxima:', max)
+                console.log('Clima:', desc.blue)
                 break;
 
             case 2:
-                console.log('Historial')
+                busquedas.historialCapitalizado.forEach( (lugar, i) => {
+                    const idx = `${ i + 1 }.`.green
+                    console.log(`${idx} ${lugar}`)
+                })
                 break;
         }
 
